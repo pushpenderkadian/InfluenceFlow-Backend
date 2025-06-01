@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+import requests
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -321,4 +322,74 @@ async def edit_campaign(
     return {
         "status": True
     }
+
+
+@router.get("/creator/{creator_id}/campaign/{campaign_id}/chat")
+async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncSession = Depends(get_db),current_user: User = Depends(get_current_user),):
+    """
+    Fetch chat messages for a specific creator and campaign
+    """
+    try:
+        # Get thread_id from database
+        row = await db.fetchrow(
+            "SELECT thread_id FROM campaign_creators WHERE creator_id=$1 AND campaign_id=$2", 
+            creator_id, campaign_id
+        )
+        
+        if not row or not row["thread_id"]:
+            raise HTTPException(
+                status_code=404, 
+                detail="No chat thread found for this creator and campaign"
+            )
+        
+        thread_id = row["thread_id"]
+        
+        # Fetch messages from OpenAI
+        messages_response = requests.get(f"https://api.openai.com/v1/threads/{thread_id}/messages",
+            headers={
+                "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+                "OpenAI-Beta": "assistants=v2"
+            }
+        )
+        
+        if messages_response.status_code != 200:
+            raise HTTPException(
+                status_code=messages_response.status_code, 
+                detail=f"Failed to fetch messages: {messages_response.text}"
+            )
+            
+        messages = messages_response.json()
+        
+        # Format messages in chronological order (oldest first)
+        formatted_messages = []
+        for message in reversed(messages.get("data", [])):
+            formatted_message = {
+                "id": message.get("id"),
+                "role": message.get("role"),
+                "content": "",
+                "created_at": message.get("created_at"),
+                "timestamp": message.get("created_at")
+            }
+            
+            # Extract text content
+            content_parts = []
+            for content_block in message.get("content", []):
+                if content_block.get("type") == "text":
+                    content_parts.append(content_block.get("text", {}).get("value", ""))
+            
+            formatted_message["content"] = " ".join(content_parts)
+            formatted_messages.append(formatted_message)
+        
+        return {
+            "creator_id": creator_id,
+            "campaign_id": campaign_id,
+            "thread_id": thread_id,
+            "messages": formatted_messages,
+            "total_messages": len(formatted_messages)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching chat: {str(e)}")
 

@@ -15,13 +15,12 @@ client = OpenAI(api_key=OPENAI_API_KEY,default_headers={"OpenAI-Beta": "assistan
 app = FastAPI()
 
 # PostgreSQL connection
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://username:password@localhost:5432/db")
+CHAT_DATABASE_URL = os.getenv("CHAT_DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost:5432/influenceflow")
 
 functions=[
   {
     "name": "update_outreach_status",
     "description": "Update the status of outreach lifecycle in the database",
-    "strict": True,
     "parameters": {
       "type": "object",
       "properties": {
@@ -108,16 +107,24 @@ limit 1
 
 async def create_thread_if_not_exist(creator_id, campaign_id):
     row = await app.state.db.fetchrow("SELECT thread_id FROM campaign_creators WHERE creator_id=$1 AND campaign_id=$2", creator_id, campaign_id)
-    if row:
+    if row['thread_id']:
+        print(f"Thread already exists for creator {creator_id} and campaign {campaign_id}: {row['thread_id']}")
         return row["thread_id"]
 
-    thread = client.beta.threads.create()
-
+    thread_response = requests.post("https://api.openai.com/v1/threads",
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+            "OpenAI-Beta": "assistants=v2"
+        }
+    )
+    thread = thread_response.json()
+    print(f"Created new thread: {thread}")
     await app.state.db.execute(
         "UPDATE campaign_creators SET thread_id=$3 WHERE creator_id=$1 AND campaign_id=$2",
-        creator_id, campaign_id, thread.id
+        creator_id, campaign_id, thread["id"]
     )
-    return thread.id
+    return thread["id"]
 
 
 @app.post("/whatsapp-webhook")
@@ -138,32 +145,66 @@ async def handle_whatsapp_message(payload: WhatsAppMessage):
     thread_id = await create_thread_if_not_exist(creator_data['creator_id'], creator_data['campaign_id'])
 
     # Post creator message to thread
-    client.beta.threads.messages.create(
-        thread_id=thread_id,
-        role="user",
-        content=payload.message
+    message_response = requests.post(f"https://api.openai.com/v1/threads/{thread_id}/messages",
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+            "OpenAI-Beta": "assistants=v2"
+        },
+        json={
+            "role": "user",
+            "content": payload.message
+        }
     )
 
     # Run the assistant on this thread
-    run = client.beta.threads.runs.create(
-        assistant_id=creator_data["assistant_id"],
-        thread_id=thread_id
+    run_response = requests.post(f"https://api.openai.com/v1/threads/{thread_id}/runs",
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+            "OpenAI-Beta": "assistants=v2"
+        },
+        json={
+            "assistant_id": creator_data["assistant_id"]
+        }
     )
-
+    run = run_response.json()
+    print(f"Run started: {run}")
     # Wait or poll run status until complete (simplified here)
     import time
     while True:
-        run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
-        if run_status.status == "completed":
+        run_status_response = requests.get(f"https://api.openai.com/v1/threads/{thread_id}/runs/{run['id']}",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "OpenAI-Beta": "assistants=v2"
+            }
+        )
+        run_status = run_status_response.json()
+        if run_status["status"] == "completed":
             break
-        elif run_status.status == "failed":
+        elif run_status["status"] == "failed":
             raise HTTPException(status_code=500, detail="Run failed")
         time.sleep(1)
 
-    messages = client.beta.threads.messages.list(thread_id=thread_id)
-    last_message = next((m for m in messages.data if m.role == "assistant"), None)
-    response_text = last_message.content[0].text.value if last_message else "Sorry, I couldn't process that."
-
+    messages_response = requests.get(f"https://api.openai.com/v1/threads/{thread_id}/messages",
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "OpenAI-Beta": "assistants=v2"
+        }
+    )
+    messages = messages_response.json()
+    
+    # Find the last assistant message
+    last_message = None
+    for message in messages["data"]:
+        if message["role"] == "assistant":
+            last_message = message
+            break
+    
+    if last_message and last_message["content"]:
+        response_text = last_message["content"][0]["text"]["value"]
+    else:
+        response_text = "Sorry, I couldn't process that."
     return {"reply": response_text}
 
 

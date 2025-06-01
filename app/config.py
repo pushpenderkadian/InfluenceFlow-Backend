@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     RABBITMQ_PASSWORD: str = None
     RABBITMQ_VHOST: str = None
     WHATSAPP_QUEUE_NAME: str = None
+
+    OPENAI_API_KEY: str
     
     class Config:
         env_file = ".env"
