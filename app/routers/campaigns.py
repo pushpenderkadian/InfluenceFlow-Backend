@@ -18,7 +18,8 @@ from ..schemas.campaign import (
     CampaignUpdate,
     CampaignCreatorCreate,
     CampaignCreator as CampaignCreatorSchema,
-    CampaignStatusUpdate
+    CampaignStatusUpdate,
+    PaymentRequest
 )
 from ..dependencies import get_current_user, require_role
 from ..middlewares.rate_limiter import limiter
@@ -27,6 +28,9 @@ from sqlalchemy import text
 from app.models.outreach_log import OutreachLog
 from app.config import settings
 
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
 @router.post("/", response_model=CampaignSchema)
@@ -325,24 +329,25 @@ async def edit_campaign(
 
 
 @router.get("/creator/{creator_id}/campaign/{campaign_id}/chat")
-async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncSession = Depends(get_db),current_user: User = Depends(get_current_user),):
+async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncSession = Depends(get_db),current_user: User = Depends(get_current_user)):
     """
     Fetch chat messages for a specific creator and campaign
     """
     try:
         # Get thread_id from database
-        row = await db.fetchrow(
-            "SELECT thread_id FROM campaign_creators WHERE creator_id=$1 AND campaign_id=$2", 
-            creator_id, campaign_id
+        result = await db.execute(
+            text("SELECT thread_id FROM campaign_creators WHERE creator_id=:creator_id AND campaign_id=:campaign_id"),
+            {"creator_id": creator_id, "campaign_id": campaign_id}
         )
+        row = result.fetchone()
         
-        if not row or not row["thread_id"]:
+        if not row or not row.thread_id:
             raise HTTPException(
                 status_code=404, 
                 detail="No chat thread found for this creator and campaign"
             )
         
-        thread_id = row["thread_id"]
+        thread_id = row.thread_id
         
         # Fetch messages from OpenAI
         messages_response = requests.get(f"https://api.openai.com/v1/threads/{thread_id}/messages",
@@ -393,3 +398,41 @@ async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncS
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching chat: {str(e)}")
 
+
+
+
+@router.post("/payment")
+async def process_payment(payment_data: PaymentRequest,db: AsyncSession = Depends(get_db),current_user: User = Depends(get_current_user)):
+    # Validate user exists
+    try:
+        user_row = current_user.dict()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    if not user_row:
+        raise HTTPException(status_code=400, detail="Invalid User")
+    
+    user_id = user_row['id']
+    
+    try:
+        # Start database transaction
+        async with db.acquire() as connection:
+            async with connection.transaction():
+                # Create Stripe payment intent
+                payment_intent = stripe.PaymentIntent.create(
+                    amount=payment_data.amount,
+                    currency="inr",
+                    description="Stripe Payment",
+                    payment_method=payment_data.id,
+                    confirm=True
+                )
+                
+               
+    except stripe.error.StripeError as e:
+        print(f"Stripe error: {e}")
+        raise HTTPException(status_code=500, detail="Payment Failed")
+    except Exception as error:
+        print(f"Database error: {error}")
+        raise HTTPException(status_code=500, detail="Payment Failed")
+    
+    return {"message": "Payment Successful"}

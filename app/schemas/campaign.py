@@ -89,3 +89,10 @@ class CampaignCreator(CampaignCreatorBase):
 class CampaignStatusUpdate(BaseModel):
     status: str
 
+class PaymentRequest(BaseModel):
+    amount: int
+    id: str  # payment_method_id from Stripe
+    user: str  # user email
+    plan_name: str
+    purchase_date: datetime
+    expire_date: datetime

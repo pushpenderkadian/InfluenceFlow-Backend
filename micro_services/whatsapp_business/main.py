@@ -134,13 +134,6 @@ async def handle_whatsapp_message(payload: WhatsAppMessage):
     if not creator_data:
         raise HTTPException(status_code=404, detail="Creator or campaign not found")
 
-    # creator = Creator(**{k: creator_data[k] for k in Creator.__fields__})
-    # campaign = Campaign(
-    #     id=creator_data["campaign_id"],
-    #     title=creator_data["title"],
-    #     description=creator_data["description"],
-    #     budget=creator_data["budget"]
-    # )
 
     thread_id = await create_thread_if_not_exist(creator_data['creator_id'], creator_data['campaign_id'])
 

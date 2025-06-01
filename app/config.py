@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     WHATSAPP_QUEUE_NAME: str = None
 
     OPENAI_API_KEY: str
+
+    CHAT_DATABASE_URL: str
+
+    STRIPE_SECRET_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"
