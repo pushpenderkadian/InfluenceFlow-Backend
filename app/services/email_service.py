@@ -5,6 +5,7 @@ from jinja2 import Template
 from typing import Dict, Any, Optional
 import logging
 from app.config import settings
+from app.models.outreach_log import OutreachStatus
 from helpers.queue_helper import create_queue
 from app.models.outreach_log import OutreachStatus
 
@@ -114,7 +115,7 @@ class EmailService:
             "recipient_contact": creator_email,
             "subject": subject,
             "message": body,
-            "status": OutreachStatus.INITIATED.value,
+            "status": "INITIATED",
         }
         return response
 
@@ -185,7 +186,7 @@ class EmailService:
         
         return await self.send_email(creator_email, subject, body)
     
-    async def send_campaign_invitation_to_queue(self,payload):
+    async def send_campaign_invitation_to_queue(self, payload):
         print(f"Sending data to campaign invitation queue: {payload}")
         queue = create_queue(
             queue_name=settings.EMAIL_QUEUE_NAME,

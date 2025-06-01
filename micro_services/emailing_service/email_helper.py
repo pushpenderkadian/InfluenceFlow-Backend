@@ -20,10 +20,6 @@ async def send_outreach_message_to_creator(outreach_id, db):
             print(f"No outreach found for ID: {outreach_id}")
             return False
 
-        if outreach.outreach_type != "email":
-            print("Outreach type is not email, skipping.")
-            return False
-
         email = outreach.recipient_contact
         EmailService.send_email(
             to_email=email,
