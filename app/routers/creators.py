@@ -183,7 +183,8 @@ async def update_creator_profile(
         'content_types': current_creator.content_types,
         'instagram_followers': current_creator.instagram_followers,
         'base_rate': current_creator.base_rate,
-        'engagement_rate': current_creator.engagement_rate
+        'engagement_rate': current_creator.engagement_rate,
+        'profile_image_url': current_creator.profile_image_url,
     }
     await pinecone_service.upsert_creator(current_creator.id, creator_data)
     

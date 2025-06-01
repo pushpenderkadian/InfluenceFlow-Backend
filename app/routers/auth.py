@@ -96,7 +96,9 @@ async def register_creator(request: Request, creator: CreatorCreate, db: AsyncSe
         base_rate=creator.base_rate,
         engagement_rate=creator.engagement_rate,
         languages=creator.languages,
-        content_types=creator.content_types
+        content_types=creator.content_types,
+        phone_number=creator.phone_number,
+        profile_image_url=creator.profile_image_url,
     )
     
     db.add(db_creator)

@@ -7,6 +7,7 @@ class CreatorBase(BaseModel):
     email: EmailStr
     username: str
     full_name: str
+    phone_number: str
     bio: Optional[str] = None
     location: Optional[str] = None
     category: str
@@ -22,6 +23,7 @@ class CreatorBase(BaseModel):
     engagement_rate: Optional[float] = None
     languages: Optional[List[str]] = None
     content_types: Optional[List[str]] = None
+    profile_image_url: Optional[str] = None
 
 class CreatorCreate(CreatorBase):
     password: str
@@ -43,6 +45,7 @@ class CreatorUpdate(BaseModel):
     engagement_rate: Optional[float] = None
     languages: Optional[List[str]] = None
     content_types: Optional[List[str]] = None
+    profile_image_url: Optional[str] = None
 
 class CreatorLogin(BaseModel):
     username: str
