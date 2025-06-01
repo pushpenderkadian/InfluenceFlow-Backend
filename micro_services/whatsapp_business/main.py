@@ -113,7 +113,7 @@ async def create_thread_if_not_exist(creator_id, campaign_id):
 
     thread_response = requests.post("https://api.openai.com/v1/threads",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
             "Content-Type": "application/json",
             "OpenAI-Beta": "assistants=v2"
         }
@@ -140,7 +140,7 @@ async def handle_whatsapp_message(payload: WhatsAppMessage):
     # Post creator message to thread
     message_response = requests.post(f"https://api.openai.com/v1/threads/{thread_id}/messages",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
             "Content-Type": "application/json",
             "OpenAI-Beta": "assistants=v2"
         },
@@ -153,7 +153,7 @@ async def handle_whatsapp_message(payload: WhatsAppMessage):
     # Run the assistant on this thread
     run_response = requests.post(f"https://api.openai.com/v1/threads/{thread_id}/runs",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
             "Content-Type": "application/json",
             "OpenAI-Beta": "assistants=v2"
         },
@@ -168,7 +168,7 @@ async def handle_whatsapp_message(payload: WhatsAppMessage):
     while True:
         run_status_response = requests.get(f"https://api.openai.com/v1/threads/{thread_id}/runs/{run['id']}",
             headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
                 "OpenAI-Beta": "assistants=v2"
             }
         )
@@ -181,7 +181,7 @@ async def handle_whatsapp_message(payload: WhatsAppMessage):
 
     messages_response = requests.get(f"https://api.openai.com/v1/threads/{thread_id}/messages",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
             "OpenAI-Beta": "assistants=v2"
         }
     )
