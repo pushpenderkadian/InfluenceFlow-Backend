@@ -191,6 +191,7 @@ async def update_creator_profile(
 
 @router.get("/me/campaigns")
 async def get_creator_campaigns(
+    request: Request,
     current_creator: Creator = Depends(get_current_creator),
     db: AsyncSession = Depends(get_db)
 ):

@@ -38,10 +38,11 @@ async def register_user(request: Request, user: UserCreate, db: AsyncSession = D
             detail="Username already taken"
         )
     
-    # Create new user
+
     hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
+        uid=user.uid,
         username=user.username,
         hashed_password=hashed_password,
         full_name=user.full_name,
@@ -182,7 +183,3 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 
-@router.get("/verify-token")
-async def verify_token(current_user: User = Depends(get_current_user)):
-    """Verify if token is valid"""
-    return {"valid": True, "user_id": current_user.id}
