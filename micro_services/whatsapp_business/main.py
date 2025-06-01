@@ -1,6 +1,6 @@
 # assistant_outreach_service/main.py
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 import requests
 from pydantic import BaseModel
 from typing import Optional
@@ -68,7 +68,25 @@ async def startup():
 async def shutdown():
     await app.state.db.close()
 
+from app.config import settings
 
+
+def send_whatsapp_message(to_number: str, message: str):
+    url = f"{settings.WHATSAPP_API_URL}"
+    headers = {"Authorization": f"Bearer {settings.WHATSAPP_AGENT_API_TOKEN}"}
+    data = {
+        "messaging_product":"whatsapp",
+        
+        "to": to_number,
+
+        "recipient_type": "individual",
+
+        "type": "text",
+
+        "text": {"body": message}
+
+    }
+    requests.post(url, json=data, headers=headers)
 async def get_creator_by_mobile(mobile):
     row = await app.state.db.fetchrow(
         f"""
@@ -231,3 +249,23 @@ async def create_campaign_assistant(campaign: Campaign):
     )
 
     return {"assistant_id": assistant.get("id")}
+@app.get("/newbothook")
+async def setwebhook(request: Request):
+    return request.query_params.get("challange")
+
+@app.post("/whatsapp_bothook")
+async def webhook(request: Request):
+    data = await request.json()
+    print(data)
+    try:
+        msgpayload=data.get("entry")[0].get("changes")[0].get("value").get("messages")[0]
+    except:
+        return {"status":"ignored"}
+    if msgpayload.get("type")=="text":
+        message = msgpayload.get("text").get("body")
+        contact_number=msgpayload.get("from")
+        response_txt = requests.post("http://localhost:8001/whatsapp-webhook",json={
+            "message": message,
+            "mobile_number": contact_number
+        })
+        await send_whatsapp_message(msgpayload.get("from"), response_txt.json().get("reply"))

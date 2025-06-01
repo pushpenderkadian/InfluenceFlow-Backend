@@ -328,6 +328,7 @@ async def edit_campaign(
         assistant_id = response["assistant_id"]
     except Exception as e:
         print(f"Error getting assitant id")
+        raise e
     
 
     update_data = campaign_status_update.dict(exclude_unset=True)
