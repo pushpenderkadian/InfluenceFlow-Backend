@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     CHAT_DATABASE_URL: str
 
     STRIPE_SECRET_KEY: Optional[str] = None
+
+    WHATSAPP_AGENT_API_URL: str 
+
+    WHATSAPP_AGENT_API_TOKEN: str
     
     class Config:
         env_file = ".env"

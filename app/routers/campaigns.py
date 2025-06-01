@@ -329,7 +329,7 @@ async def edit_campaign(
 
 
 @router.get("/creator/{creator_id}/campaign/{campaign_id}/chat")
-async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncSession = Depends(get_db),current_user: User = Depends(get_current_user)):
+async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncSession = Depends(get_db)):
     """
     Fetch chat messages for a specific creator and campaign
     """
