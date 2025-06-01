@@ -339,13 +339,13 @@ async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncS
             text("SELECT thread_id FROM campaign_creators WHERE creator_id=:creator_id AND campaign_id=:campaign_id"),
             {"creator_id": creator_id, "campaign_id": campaign_id}
         )
-        row = result.fetchone()
+        row = result.mappings().fetchone()
         
-        if not row or not row.thread_id:
+        if not row["thread_id"]:
             return {
                 "creator_id": creator_id,
                 "campaign_id": campaign_id,
-                "thread_id": thread_id,
+                "thread_id": "",
                 "messages": "",
                 "total_messages": []
             }
