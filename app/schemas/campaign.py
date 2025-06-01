@@ -85,3 +85,7 @@ class CampaignCreator(CampaignCreatorBase):
 
     class Config:
         from_attributes = True
+
+class CampaignStatusUpdate(BaseModel):
+    status: str
+

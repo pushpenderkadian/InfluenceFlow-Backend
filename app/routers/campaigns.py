@@ -14,11 +14,13 @@ from ..schemas.campaign import (
     Campaign as CampaignSchema, 
     CampaignUpdate,
     CampaignCreatorCreate,
-    CampaignCreator as CampaignCreatorSchema
+    CampaignCreator as CampaignCreatorSchema,
+    CampaignStatusUpdate
 )
 from ..dependencies import get_current_user, require_role
 from ..middlewares.rate_limiter import limiter
 from ..services.email_service import email_service
+from sqlalchemy import text
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -243,3 +245,39 @@ async def get_campaign_creators(
     )
     
     return result.scalars().all()
+
+
+@router.post("/{campaign_id}/status-update")
+@limiter.limit("20/minute")
+async def edit_campaign(
+        campaign_id: int,
+        campaign_status_update: CampaignStatusUpdate,
+        request: Request,
+        db: AsyncSession = Depends(get_db)
+    ):
+
+    """Update a campaign"""
+    result = await db.execute(
+        select(Campaign)
+        .filter(Campaign.id == campaign_id)
+    )
+    campaign = result.scalar_one_or_none()
+    
+    if not campaign:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Campaign not found"
+        )
+    
+    # Update campaign fields
+    update_data = campaign_status_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(campaign, field, value)
+    
+    await db.commit()
+    await db.refresh(campaign)
+    
+    return {
+        "status": True
+    }
+
