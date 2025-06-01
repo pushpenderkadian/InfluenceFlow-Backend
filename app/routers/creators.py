@@ -14,8 +14,8 @@ from ..schemas.creator import (
 )
 from ..dependencies import get_current_user, get_current_creator
 from ..middlewares.rate_limiter import limiter
-from ..services.pinecone_service import pinecone_service
-
+from ..services.pinecone_service import PineconeService
+pinecone_service = PineconeService()
 router = APIRouter(prefix="/creators", tags=["creators"])
 
 @router.get("/search", response_model=CreatorSearchResult)

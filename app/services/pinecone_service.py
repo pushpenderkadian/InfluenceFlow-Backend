@@ -169,5 +169,3 @@ class PineconeService:
         except Exception as e:
             logger.error(f"Failed to delete creator {creator_id}: {e}")
 
-# Global instance
-pinecone_service = PineconeService()

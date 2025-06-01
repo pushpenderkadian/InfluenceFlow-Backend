@@ -14,6 +14,8 @@ from ..auth.jwt_handler import create_access_token, get_password_hash, verify_pa
 from ..dependencies import get_current_user
 from ..middlewares.rate_limiter import limiter
 from ..config import settings
+from ..services.pinecone_service import PineconeService
+pinecone_service = PineconeService()
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -101,7 +103,6 @@ async def register_creator(request: Request, creator: CreatorCreate, db: AsyncSe
     await db.refresh(db_creator)
     
     # Add creator to Pinecone for search
-    from ..services.pinecone_service import pinecone_service
     creator_data = {
         'full_name': db_creator.full_name,
         'bio': db_creator.bio,
