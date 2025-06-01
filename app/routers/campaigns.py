@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import List
+from datetime import datetime, UTC
 
+from helpers.queue_helper import create_queue
 from ..database import get_db
 from ..models.user import User
 from ..models.campaign import Campaign
@@ -21,6 +23,8 @@ from ..dependencies import get_current_user, require_role
 from ..middlewares.rate_limiter import limiter
 from ..services.email_service import email_service
 from sqlalchemy import text
+from app.models.outreach_log import OutreachLog
+from app.config import settings
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -207,7 +211,7 @@ async def invite_creator_to_campaign(
         'end_date': campaign.end_date
     }
     
-    await email_service.send_campaign_invitation(
+    outreach_data = await email_service.send_campaign_invitation(
         creator_email=creator.email,
         creator_name=creator.full_name,
         campaign_title=campaign.title,
@@ -215,8 +219,45 @@ async def invite_creator_to_campaign(
         offered_rate=invitation.offered_rate,
         campaign_details=campaign_details
     )
+
+    outreach_log_ingest_data = {
+        "campaign_creator_id": invitation.creator_id,
+        "outreach_type": outreach_data["outreach_type"],
+        "recipient_contact": outreach_data["recipient_contact"],
+        "subject": outreach_data["subject"],
+        "message": outreach_data["message"],
+        "status": outreach_data["status"],
+        "sent_at": datetime.now(UTC),
+        "delivered_at": datetime.now(UTC)
+    }
+
+    db_outreach_log = OutreachLog(outreach_log_ingest_data)
     
+    db.add(db_outreach_log)
+    await db.commit()
+    await db.refresh(db_outreach_log)
+
+    outreach_id = db_outreach_log.id
+    status = db_outreach_log.status
+
+    payload = {
+        "outreach_id": outreach_id,
+        "status": status
+    }
+
+    print(f"Sending payload to email queue: {payload}")
+    queue = create_queue(
+        queue_name=settings.EMAIL_QUEUE_NAME,
+        host=settings.RABBITMQ_HOST,
+        port=settings.RABBITMQ_PORT,
+        user=settings.RABBITMQ_USER,
+        password=settings.RABBITMQ_PASSWORD,
+        vhost=settings.RABBITMQ_VHOST
+    )
+    queue.put(payload)
+
     return db_campaign_creator
+
 
 @router.get("/{campaign_id}/creators", response_model=List[CampaignCreatorSchema])
 async def get_campaign_creators(

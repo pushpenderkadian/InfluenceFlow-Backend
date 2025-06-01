@@ -1,6 +1,7 @@
 .env
 venv/
 __pycache__/
-hackacthon/
+hackathon/
 .env.example
 .idea
+firebase_auth_creds.json

@@ -5,6 +5,7 @@ from jinja2 import Template
 from typing import Dict, Any, Optional
 import logging
 from app.config import settings
+from helpers.queue_helper import create_queue
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +101,23 @@ class EmailService:
         )
         
         subject = f"Collaboration Opportunity: {campaign_title} - {brand_name}"
-        
-        return await self.send_email(creator_email, subject, body)
-    
+        queue_payload = {
+            "email": creator_email,
+            "subject": subject,
+            "body": body,
+        }
+        await self.send_campaign_invitation_to_queue(queue_payload)
+
+        response = {
+            "outreach_type": "email",
+            "recipient_contact": creator_email,
+            "subject": subject,
+            "message": body,
+            "status": "initiated",
+        }
+        return response
+
+
     async def send_contract_notification(
         self,
         creator_email: str,
@@ -168,6 +183,20 @@ class EmailService:
         subject = f"Payment Processed - ${payment_amount} for {campaign_title}"
         
         return await self.send_email(creator_email, subject, body)
+    
+    async def send_campaign_invitation_to_queue(payload):
+        print(f"Sending data to campaign invitation queue: {payload}")
+        queue = create_queue(
+            queue_name=settings.CAMPAIGN_INVITATION_QUEUE_NAME,
+            host=settings.RABBITMQ_HOST,
+            port=settings.RABBITMQ_PORT,
+            user=settings.RABBITMQ_USER,
+            password=settings.RABBITMQ_PASSWORD,
+            vhost=settings.RABBITMQ_VHOST
+        )
+        queue.put(payload)
+        return True
+
 
 # Global instance
 email_service = EmailService()
