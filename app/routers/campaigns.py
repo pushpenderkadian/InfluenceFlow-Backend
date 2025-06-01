@@ -342,10 +342,13 @@ async def get_creator_campaign_chat(creator_id: int, campaign_id: int,db: AsyncS
         row = result.fetchone()
         
         if not row or not row.thread_id:
-            raise HTTPException(
-                status_code=404, 
-                detail="No chat thread found for this creator and campaign"
-            )
+            return {
+                "creator_id": creator_id,
+                "campaign_id": campaign_id,
+                "thread_id": thread_id,
+                "messages": "",
+                "total_messages": []
+            }
         
         thread_id = row.thread_id
         
