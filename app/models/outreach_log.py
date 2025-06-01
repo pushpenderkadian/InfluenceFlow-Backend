@@ -10,6 +10,7 @@ class OutreachType(str, enum.Enum):
     INSTAGRAM_DM = "instagram_dm"
 
 class OutreachStatus(str, enum.Enum):
+    INITIATED = "initiated"
     SENT = "sent"
     DELIVERED = "delivered"
     READ = "read"

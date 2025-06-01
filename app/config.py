@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
+
+    EMAIL_QUEUE_NAME: str = None
+    RABBITMQ_HOST: str = None
+    RABBITMQ_PORT: int = None
+    RABBITMQ_USER: str = None
+    RABBITMQ_PASSWORD: str = None
+    RABBITMQ_VHOST: str = None
     
     class Config:
         env_file = ".env"
