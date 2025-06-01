@@ -321,6 +321,8 @@ async def edit_campaign(
     try:
         assistant_id_url = f"http://localhost:8001/create-campaign-assistant"
         response = requests.post(url=assistant_id_url, json=campaign)
+        print(response.text)
+
         response.raise_for_status()
         response = response.json()
         assistant_id = response["assistant_id"]
