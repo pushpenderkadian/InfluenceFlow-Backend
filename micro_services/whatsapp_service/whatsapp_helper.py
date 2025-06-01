@@ -9,11 +9,11 @@ from app.config import settings
 
 async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
     query = text(f"""
-        select * from outreach_logs where id = {outreach_id}
+        select * from outreach_logs where id = {outreach_id} and outreach_type = 'WHATSAPP'
     """)
     try:
         result = await db.execute(query)
-        outreach = result.scalar_one_or_none()
+        outreach = result.mappings().fetchone()
         if not outreach:
             print(f"No outreach found for ID: {outreach_id}")
             return False
@@ -26,7 +26,7 @@ async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
         """)
 
         result = await db.execute(query)
-        campaign_creator = result.scalar_one_or_none()
+        campaign_creator = result.mappings().fetchone()
         if not campaign_creator:
             print(f"No campaign creator found for ID: {outreach_id}")
             return False
@@ -38,7 +38,7 @@ async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
             select * from campaigns where id = {campaign_id}
         """)
         result = await db.execute(query)
-        campaign = result.scalar_one_or_none()
+        campaign = result.mappings().fetchone()
         if not campaign:
             print(f"No campaign found for ID: {campaign_id}")
             return False
@@ -51,17 +51,20 @@ async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
             select * from creators where id = {creator_id}
         """)
         result = await db.execute(query)
-        influencer = result.scalar_one_or_none()
+        influencer = result.mappings().fetchone()
         if not influencer:
             print(f"No influencer found for ID: {creator_id}")
             return False
         influencer_name = influencer.full_name
 
         try:
-            whatsapp_agent_api_url = f"{settings.WHATSAPP_AGENT_API_URL}/send_message"
+            whatsapp_agent_api_url = f"{settings.WHATSAPP_AGENT_API_URL}"
             headers={
                 "Authorization": f"Bearer {settings.WHATSAPP_AGENT_API_TOKEN}",
             }
+            print(whatsapp_agent_api_url)
+            print(headers)
+
             payload = {
                 "to": f"{phone}",
                 "recipient_type": "individual",
@@ -78,26 +81,28 @@ async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
                             "parameters": [
                                 {
                                     "type": "text",
-                                    "text": influencer_name
+                                    "text": f"{influencer_name}"
                                 },
                                 {
                                     "type": "text",
-                                    "text": brand_name
+                                    "text": f"{brand_name}"
                                 },
                                 {
                                     "type": "text",
-                                    "text": campaign_details
+                                    "text": f"{campaign_details}"
                                 },
                                 {
                                     "type": "text",
-                                    "text": campaign_details
+                                    "text": f"{campaign_details}"
                                 }
                             ]
                         }
                     ]
                 }
             }
+            print(f"Payload: {payload}")
             response = requests.post(url=whatsapp_agent_api_url,headers=headers, json=payload)
+            
             response.raise_for_status()
             print("WhatsApp message sent successfully.")
         except Exception as e:

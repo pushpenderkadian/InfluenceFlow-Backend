@@ -7,15 +7,15 @@ from typing import Optional
 from openai import OpenAI
 import os
 import asyncpg
-
+from app.config import settings
 # Load environment variables (replace with actual values or load from .env)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "your-openai-api-key")
-client = OpenAI(api_key=OPENAI_API_KEY,default_headers={"OpenAI-Beta": "assistants=v2"})
+
+client = OpenAI(api_key=settings.OPENAI_API_KEY,default_headers={"OpenAI-Beta": "assistants=v2"})
 
 app = FastAPI()
 
 # PostgreSQL connection
-CHAT_DATABASE_URL = os.getenv("CHAT_DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost:5432/influenceflow")
+CHAT_DATABASE_URL = os.getenv("CHAT_DATABASE_URL")
 
 functions=[
   {
@@ -61,7 +61,7 @@ class Campaign(BaseModel):
 
 @app.on_event("startup")
 async def startup():
-    app.state.db = await asyncpg.create_pool(CHAT_DATABASE_URL)
+    app.state.db = await asyncpg.create_pool(settings.CHAT_DATABASE_URL)
 
 
 @app.on_event("shutdown")
@@ -212,7 +212,7 @@ async def create_campaign_assistant(campaign: Campaign):
 
     assistant = requests.post("https://api.openai.com/v1/assistants",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
             "Content-Type": "application/json",
             "OpenAI-Beta": "assistants=v2"
         },

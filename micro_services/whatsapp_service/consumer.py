@@ -6,6 +6,7 @@ import time
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from app.database import get_db_session
 from app.config import settings
 
 DATABASE_URL = settings.DATABASE_URL  # Ensure this is correctly set in your config
@@ -20,10 +21,10 @@ async_session = sessionmaker(
     expire_on_commit=False,
 )
 async def fetch_and_process_whatsapp_outreach(outreach_id):
-    async with AsyncSession() as db:  # Create a new database session
         try:
+            db_session = await get_db_session()
             # Pass the database session explicitly to the function
-            result = await send_whatsapp_outreach_message_to_creator(outreach_id, db)
+            result = await send_whatsapp_outreach_message_to_creator(outreach_id, db_session)
             if result:
                 print(f"Successfully processed outreach ID: {outreach_id}")
             else:

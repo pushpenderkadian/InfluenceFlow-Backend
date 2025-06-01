@@ -6,7 +6,7 @@ from sqlalchemy import  text
 
 async def send_outreach_message_to_creator(outreach_id, db):
     query = text(f"""
-        select * from outreach_logs where id = {outreach_id}
+        select * from outreach_logs where id = {outreach_id} and outreach_type = 'EMAIL'
     """)
     try:
         result = await db.execute(query)
