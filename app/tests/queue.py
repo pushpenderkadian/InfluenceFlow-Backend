@@ -11,7 +11,7 @@ queue = create_queue(
 )
 
 message = {
-    "outreach_id": 9,
+    "outreach_id": 10,
     "status": "initiated",
 }
 queue.put(message)

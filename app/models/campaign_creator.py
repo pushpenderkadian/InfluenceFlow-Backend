@@ -29,6 +29,7 @@ class CampaignCreator(Base):
     invited_at = Column(DateTime(timezone=True), server_default=func.now())
     accepted_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    thread_id = Column(String, nullable=True)  # Optional thread ID for communication
     
     # Content deliverables
     deliverables_completed = Column(Integer, default=0)

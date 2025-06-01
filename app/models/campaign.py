@@ -36,8 +36,12 @@ class Campaign(Base):
     status = Column(Enum(CampaignStatus), default=CampaignStatus.DRAFT)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    assistant_id = Column(String, nullable=True)  # Optional assistant for the campaign
     
     # Relationships
     user = relationship("User", back_populates="campaigns")
     campaign_creators = relationship("CampaignCreator", back_populates="campaign")
+
+
 

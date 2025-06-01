@@ -1,4 +1,5 @@
 from app.services.email_service import EmailService
+from app.models.outreach_log import OutreachLog, OutreachType
 
 from sqlalchemy import  text
 
@@ -9,12 +10,14 @@ async def send_outreach_message_to_creator(outreach_id, db):
     """)
     try:
         result = await db.execute(query)
-        outreach = result.scalar_one_or_none()
+        outreach = result.mappings().fetchone()
+        
+        outreach = OutreachLog(**outreach) if outreach else None
         if not outreach:
             print(f"No outreach found for ID: {outreach_id}")
             return False
-
-        if outreach.outreach_type != "email":
+        
+        if outreach.outreach_type != 'EMAIL':
             print("Outreach type is not email, skipping.")
             return False
 

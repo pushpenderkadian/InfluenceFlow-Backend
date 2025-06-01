@@ -39,12 +39,12 @@ async def register_user(request: Request, user: UserCreate, db: AsyncSession = D
         )
     
 
-    hashed_password = get_password_hash(user.password)
+    # hashed_password = get_password_hash(user.password)
     db_user = User(
         email=user.email,
         uid=user.uid,
         username=user.username,
-        hashed_password=hashed_password,
+        hashed_password="hashed_password",
         full_name=user.full_name,
         company_name=user.company_name,
         role=user.role,
@@ -77,11 +77,11 @@ async def register_creator(request: Request, creator: CreatorCreate, db: AsyncSe
         )
     
     # Create new creator
-    hashed_password = get_password_hash(creator.password)
+    # hashed_password = get_password_hash(creator.password)
     db_creator = Creator(
         email=creator.email,
         username=creator.username,
-        hashed_password=hashed_password,
+        hashed_password="hashed_password",
         full_name=creator.full_name,
         bio=creator.bio,
         location=creator.location,
