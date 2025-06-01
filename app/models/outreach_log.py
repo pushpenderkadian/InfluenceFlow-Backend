@@ -10,6 +10,7 @@ class OutreachType(str, enum.Enum):
     INSTAGRAM_DM = "instagram_dm"
 
 class OutreachStatus(str, enum.Enum):
+    INITIATED = "initiated"
     SENT = "sent"
     DELIVERED = "delivered"
     READ = "read"
@@ -29,7 +30,7 @@ class OutreachLog(Base):
     message = Column(Text, nullable=False)
     
     # Status and tracking
-    status = Column(Enum(OutreachStatus), default=OutreachStatus.SENT)
+    status = Column(Enum(OutreachStatus), default=OutreachStatus.INITIATED)
     sent_at = Column(DateTime(timezone=True), server_default=func.now())
     delivered_at = Column(DateTime(timezone=True), nullable=True)
     read_at = Column(DateTime(timezone=True), nullable=True)
