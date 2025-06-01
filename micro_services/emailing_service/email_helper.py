@@ -23,6 +23,7 @@ async def send_outreach_message_to_creator(outreach_id, db):
 
         email = outreach.recipient_contact
         await EmailService().send_email(
+            from_email="campaigns@emails.influency.tech",
             to_email=email,
             subject=outreach.subject,
             body=outreach.message,
