@@ -32,11 +32,11 @@ def run_microservice(service_name, port, module_path):
     except Exception as e:
         print(f"❌ Error starting {service_name}: {e}")
 
-def run_consumer(service_name, script_path):
-    """Run a consumer script"""
+def run_consumer(service_name, module_path):
+    """Run a consumer script using module path"""
     print(f"🔄 Starting {service_name} consumer...")
     try:
-        subprocess.run([sys.executable, script_path], check=True)
+        subprocess.run([sys.executable, "-m", module_path], check=True)
     except Exception as e:
         print(f"❌ Error starting {service_name} consumer: {e}")
 
@@ -65,13 +65,13 @@ if __name__ == "__main__":
         # Email Service Consumer
         threading.Thread(
             target=run_consumer,
-            args=("Email Service", "micro_services/emailing_service/consumer.py"),
+            args=("Email Service", "micro_services.emailing_service.consumer"),
             daemon=True
         ),
         # WhatsApp Service Consumer
         threading.Thread(
             target=run_consumer,
-            args=("WhatsApp Service", "micro_services/whatsapp_service/consumer.py"),
+            args=("WhatsApp Service", "micro_services.whatsapp_service.consumer"),
             daemon=True
         ),
     ]
