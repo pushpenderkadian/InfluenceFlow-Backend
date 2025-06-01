@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     RABBITMQ_USER: str = None
     RABBITMQ_PASSWORD: str = None
     RABBITMQ_VHOST: str = None
+    WHATSAPP_QUEUE_NAME: str = None
     
     class Config:
         env_file = ".env"
