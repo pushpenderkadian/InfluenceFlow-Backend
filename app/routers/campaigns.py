@@ -316,6 +316,19 @@ async def edit_campaign(
         )
     
     # Update campaign fields
+    
+    assistant_id = None
+    try:
+        assistant_id_url = f"create-campaign-assistant"
+        response = requests.post(url=assistant_id_url, json=campaign)
+        response.raise_for_status()
+        response = response.json()
+        assistant_id = response["assistant_id"]
+    except Exception as e:
+        print(f"Error getting assitant id")
+    
+    update_data["assistant_id"] = assistant_id
+
     update_data = campaign_status_update.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(campaign, field, value)
