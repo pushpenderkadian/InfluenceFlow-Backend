@@ -1,8 +1,9 @@
 from helpers.queue_helper import create_queue
 from app.config import settings
 
+
 queue = create_queue(
-    queue_name=settings.EMAIL_QUEUE_NAME,
+    queue_name=settings.WHATSAPP_QUEUE_NAME,
     host=settings.RABBITMQ_HOST,
     port=settings.RABBITMQ_PORT,
     user=settings.RABBITMQ_USER,
@@ -12,6 +13,7 @@ queue = create_queue(
 
 message = {
     "outreach_id": 10,
-    "status": "initiated",
+    "status": "INITIATED",
+
 }
 queue.put(message)
