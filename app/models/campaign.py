@@ -40,3 +40,4 @@ class Campaign(Base):
     # Relationships
     user = relationship("User", back_populates="campaigns")
     campaign_creators = relationship("CampaignCreator", back_populates="campaign")
+
