@@ -4,6 +4,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 from ..config import settings
+import firebase_admin
+from firebase_admin import credentials, auth as firebase_auth
+
+cred = credentials.Certificate("firebase_auth_creds.json")
+firebase_admin.initialize_app(cred)
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -28,7 +33,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-def verify_token(token: str) -> dict:
+def verify_old_token(token: str) -> dict:
     """Verify and decode a JWT token"""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
@@ -39,3 +44,22 @@ def verify_token(token: str) -> dict:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+
+def verify_token(token: str) -> dict:
+    try:
+        user = firebase_auth.verify_id_token(token)
+        payload = {
+            "sub": user["user_id"],
+            "user_type": user.get("user_type", "user"),
+            "exp": user.get("exp", None)
+        }
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+
