@@ -68,3 +68,34 @@ async def get_db():
                 await session.close()
             except Exception as e:
                 logger.error(f"Error closing database session: {str(e)}")
+
+# Helper function to get database session for background tasks
+async def get_db_session():
+    """Get database session for use outside of FastAPI dependency injection"""
+    session = None
+    try:
+        session = AsyncSessionLocal()
+        # Test the connection
+        await session.execute(text("SELECT 1"))
+        return session
+    except (DBAPIError, DisconnectionError) as e:
+        logger.error(f"Database connection error: {str(e)}")
+        if session:
+            try:
+                await session.rollback()
+                await session.close()
+            except:
+                pass
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable. Please try again later."
+        )
+    except Exception as e:
+        logger.error(f"Unexpected database error: {str(e)}")
+        if session:
+            try:
+                await session.rollback()
+                await session.close()
+            except:
+                pass
+        raise e
