@@ -61,7 +61,7 @@ class Campaign(BaseModel):
 
 @app.on_event("startup")
 async def startup():
-    app.state.db = await asyncpg.create_pool(DATABASE_URL)
+    app.state.db = await asyncpg.create_pool(CHAT_DATABASE_URL)
 
 
 @app.on_event("shutdown")
