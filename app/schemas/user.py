@@ -10,6 +10,7 @@ class UserBase(BaseModel):
     full_name: str
     company_name: Optional[str] = None
     role: str = "campaign_manager"
+    phone_number: str
 
 class UserCreate(UserBase):
     password: str

@@ -221,7 +221,7 @@ async def invite_creator_to_campaign(
     )
 
     outreach_log_ingest_data = {
-        "campaign_creator_id": invitation.creator_id,
+        "campaign_creator_id": current_user.id,
         "outreach_type": outreach_data["outreach_type"],
         "recipient_contact": outreach_data["recipient_contact"],
         "subject": outreach_data["subject"],
@@ -230,19 +230,19 @@ async def invite_creator_to_campaign(
         "sent_at": datetime.now(UTC),
         "delivered_at": datetime.now(UTC)
     }
-
-    db_outreach_log = OutreachLog(outreach_log_ingest_data)
+    print(f"Creating outreach log with data: {outreach_log_ingest_data}")
+    db_outreach_log = OutreachLog(**outreach_log_ingest_data)
     
     db.add(db_outreach_log)
     await db.commit()
     await db.refresh(db_outreach_log)
 
     outreach_id = db_outreach_log.id
-    status = db_outreach_log.status
+    _status = db_outreach_log.status
 
     payload = {
         "outreach_id": outreach_id,
-        "status": status
+        "status": _status
     }
 
     print(f"Sending payload to email queue: {payload}")

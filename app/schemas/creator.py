@@ -26,7 +26,7 @@ class CreatorBase(BaseModel):
     profile_image_url: Optional[str] = None
 
 class CreatorCreate(CreatorBase):
-    password: str
+    password: Optional[str] = None  # Password is optional for creation, can be set later
 
 class CreatorUpdate(BaseModel):
     full_name: Optional[str] = None

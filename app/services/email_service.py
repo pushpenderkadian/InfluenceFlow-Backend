@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 import logging
 from app.config import settings
 from helpers.queue_helper import create_queue
+from app.models.outreach_log import OutreachStatus
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ class EmailService:
             "recipient_contact": creator_email,
             "subject": subject,
             "message": body,
-            "status": "initiated",
+            "status": OutreachStatus.INITIATED.value,
         }
         return response
 
@@ -184,10 +185,10 @@ class EmailService:
         
         return await self.send_email(creator_email, subject, body)
     
-    async def send_campaign_invitation_to_queue(payload):
+    async def send_campaign_invitation_to_queue(self,payload):
         print(f"Sending data to campaign invitation queue: {payload}")
         queue = create_queue(
-            queue_name=settings.CAMPAIGN_INVITATION_QUEUE_NAME,
+            queue_name=settings.EMAIL_QUEUE_NAME,
             host=settings.RABBITMQ_HOST,
             port=settings.RABBITMQ_PORT,
             user=settings.RABBITMQ_USER,

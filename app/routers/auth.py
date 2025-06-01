@@ -47,7 +47,8 @@ async def register_user(request: Request, user: UserCreate, db: AsyncSession = D
         hashed_password=hashed_password,
         full_name=user.full_name,
         company_name=user.company_name,
-        role=user.role
+        role=user.role,
+        phone_number=user.phone_number,
     )
     
     db.add(db_user)
