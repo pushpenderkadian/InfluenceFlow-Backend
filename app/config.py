@@ -35,8 +35,6 @@ class Settings(BaseSettings):
     WHATSAPP_API_URL: str = "https://api.whatsapp.com/send"
     WHATSAPP_TOKEN: Optional[str] = None
     
-    # OpenAI
-    OPENAI_API_KEY: Optional[str] = None
     
     # CORS
     ALLOWED_ORIGINS: list = ["http://localhost:3000", "http://localhost:8080"]
