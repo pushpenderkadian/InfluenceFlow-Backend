@@ -226,7 +226,7 @@ async def invite_creator_to_campaign(
     )
 
     outreach_log_ingest_data = {
-        "campaign_creator_id": current_user.id,
+        "campaign_creator_id": db_campaign_creator.id,
         "outreach_type": outreach_data["outreach_type"],
         "recipient_contact": outreach_data["recipient_contact"],
         "subject": outreach_data["subject"],
@@ -261,7 +261,7 @@ async def invite_creator_to_campaign(
     )
     queue.put(payload)
     outreach_log_ingest_data = {
-        "campaign_creator_id": current_user.id,
+        "campaign_creator_id": db_campaign_creator.id,
         "outreach_type": "WHATSAPP",
         "recipient_contact": creator.phone_number,
         "subject": "Campaign Invitation",
