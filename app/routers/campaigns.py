@@ -320,7 +320,12 @@ async def edit_campaign(
     assistant_id = None
     try:
         assistant_id_url = f"http://localhost:8001/create-campaign-assistant"
-        response = requests.post(url=assistant_id_url, json=campaign)
+        response = requests.post(url=assistant_id_url, json={
+  "id": campaign_id,
+  "title": campaign.title,
+  "description": f"{campaign.description} brand_name: {campaign.brand_name} campaign_type: {campaign.campaign_type} start_date: {campaign.start_date} end_date: {campaign.end_date} target_audience: {campaign.target_audience.get("value")} deliverables: {campaign.deliverables.get("value")} You are an good outreach agent with good negotiation skills. You are able to negotiate with creators and close deals with them. You are able to answer questions related to the campaign and negotiate prices within the budget.",
+  "budget": campaign.budget
+})
         print(response.text)
 
         response.raise_for_status()
