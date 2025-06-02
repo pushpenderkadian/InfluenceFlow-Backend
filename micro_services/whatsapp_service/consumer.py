@@ -48,7 +48,7 @@ def consume():
         try:
             payload = queue.get()
             if payload:
-                print(payload)
+                print(f"whatsapp payload : {payload}")
                 outreach_id = payload["outreach_id"]
                 status = payload["status"]
                 if status == "INITIATED":
