@@ -249,7 +249,8 @@ async def create_campaign_assistant(campaign: Campaign):
     )
 
     return {"assistant_id": assistant.get("id")}
-@app.get("/newbothook")
+
+@app.get("/whatsapp_bothook")
 async def setwebhook(request: Request):
     return request.query_params.get("challange")
 
