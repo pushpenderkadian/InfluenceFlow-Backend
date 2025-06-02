@@ -62,8 +62,6 @@ async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
             headers={
                 "Authorization": f"Bearer {settings.WHATSAPP_AGENT_API_TOKEN}",
             }
-            print(whatsapp_agent_api_url)
-            print(headers)
 
             payload = {
                 "to": f"{phone}",
@@ -100,9 +98,9 @@ async def send_whatsapp_outreach_message_to_creator(outreach_id, db):
                     ]
                 }
             }
-            print(f"Payload: {payload}")
+            print(f"whatsapp Payload: {payload}")
             response = requests.post(url=whatsapp_agent_api_url,headers=headers, json=payload)
-            
+
             response.raise_for_status()
             print("WhatsApp message sent successfully.")
         except Exception as e:
