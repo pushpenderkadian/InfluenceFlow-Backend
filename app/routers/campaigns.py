@@ -216,6 +216,36 @@ async def invite_creator_to_campaign(
         'end_date': campaign.end_date
     }
     
+    outreach_log_ingest_data = {
+        "campaign_creator_id": db_campaign_creator.id,
+        "outreach_type": "WHATSAPP",
+        "recipient_contact": creator.phone_number,
+        "subject": "Campaign Invitation",
+        "message": "new campaign invitation",
+        "status": "initiated",
+        "sent_at": datetime.now(UTC),
+        "delivered_at": datetime.now(UTC)
+    }
+    print(f"whatsapp outreach log with data: {outreach_log_ingest_data}")
+    db_outreach_log = OutreachLog(**outreach_log_ingest_data)
+    
+    db.add(db_outreach_log)
+    await db.commit()
+    await db.refresh(db_outreach_log)
+    outreach_id = db_outreach_log.id
+    _status = db_outreach_log.status
+    queue1 = create_queue(
+        queue_name=settings.WHATSAPP_QUEUE_NAME,
+        host=settings.RABBITMQ_HOST,
+        port=settings.RABBITMQ_PORT,
+        user=settings.RABBITMQ_USER,
+        password=settings.RABBITMQ_PASSWORD,
+        vhost=settings.RABBITMQ_VHOST
+    )
+    queue1.put({
+        "outreach_id": outreach_id,
+        "status": _status
+    })
     outreach_data = await email_service.send_campaign_invitation(
         creator_email=creator.email,
         creator_name=creator.full_name,
@@ -260,36 +290,6 @@ async def invite_creator_to_campaign(
         vhost=settings.RABBITMQ_VHOST
     )
     queue.put(payload)
-    outreach_log_ingest_data = {
-        "campaign_creator_id": db_campaign_creator.id,
-        "outreach_type": "WHATSAPP",
-        "recipient_contact": creator.phone_number,
-        "subject": "Campaign Invitation",
-        "message": "new campaign invitation",
-        "status": "initiated",
-        "sent_at": datetime.now(UTC),
-        "delivered_at": datetime.now(UTC)
-    }
-    print(f"Creating outreach log with data: {outreach_log_ingest_data}")
-    db_outreach_log = OutreachLog(**outreach_log_ingest_data)
-    
-    db.add(db_outreach_log)
-    await db.commit()
-    await db.refresh(db_outreach_log)
-    outreach_id = db_outreach_log.id
-    _status = db_outreach_log.status
-    queue1 = create_queue(
-        queue_name=settings.WHATSAPP_QUEUE_NAME,
-        host=settings.RABBITMQ_HOST,
-        port=settings.RABBITMQ_PORT,
-        user=settings.RABBITMQ_USER,
-        password=settings.RABBITMQ_PASSWORD,
-        vhost=settings.RABBITMQ_VHOST
-    )
-    queue1.put({
-        "outreach_id": outreach_id,
-        "status": _status
-    })
 
     return db_campaign_creator
 

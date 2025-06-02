@@ -47,16 +47,16 @@ def consume():
     while True:
         try:
             payload = queue.get()
+            print(f"whatsapp payload : {payload}")
             if payload:
-                print(f"whatsapp payload : {payload}")
                 outreach_id = payload["outreach_id"]
                 status = payload["status"]
-                if status == "INITIATED":
+                if status == "initiated":
                     print(f"Sending whatsapp outreach for {outreach_id} with status {status}")
                     asyncio.run(fetch_and_process_whatsapp_outreach(outreach_id))
             else:
-                pass
-                # print("No messages in the queue, waiting...")
+                # pass
+                print("No messages in the whatsapp queue, waiting...")
         except Exception as e:
             print(f"Error consuming message: {e}")
         finally:
